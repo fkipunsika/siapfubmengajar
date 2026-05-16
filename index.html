@@ -29,14 +29,6 @@
         .rubric-card:hover { border-color: #0d6efd; background-color: #f8faff; }
         .btn-check:checked + .rubric-card { background-color: #e7f1ff; border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
         .accordion-button:not(.collapsed) { background-color: #e7f1ff; color: #0d6efd; font-weight: 600; }
-        /* Status Indikator Terisi */
-        .rub-item-done .rub-item-num { background-color: #198754 !important; }
-        .rub-item-done .rub-item-title { color: #198754; }
-        .rub-item-done .rub-item-checkmark { display: inline-flex !important; }
-        .rub-item-checkmark { display: none; align-items: center; justify-content: center; width: 20px; height: 20px; background: #198754; border-radius: 50%; color: #fff; font-size: 0.65rem; margin-left: 8px; flex-shrink: 0; }
-        .rub-item-header { display: flex; align-items: center; margin-bottom: 0.75rem; }
-        .rub-item-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #212529; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-right: 8px; transition: background 0.3s; }
-        .rub-item-title { font-weight: 600; font-size: 0.95rem; transition: color 0.3s; }
     </style>
 </head>
 <body>
@@ -463,14 +455,6 @@
     (function() {
         'use strict';
 
-        // === KONFIGURASI GITHUB PAGES ===
-        // Nanti ganti teks di bawah dengan URL Web App Apps Script Anda!
-        var WEB_APP_URL = "https://script.google.com/a/macros/fkip.unsika.ac.id/s/AKfycbx453qaYGl-HfjEEwkL6xk13UaxnGUBkZW-5mLRCOlGqJbXqRL0o-sbzWJ3qk6aZ9s/exec";
-
-        // Mematikan mode simulasi otomatis agar terhubung ke database asli
-        window.google = { script: { run: {} } };
-        // ================================
-
         var activePage = '';
         var appData = { users: [], files: [], nilai: {}, mhsList: [], userInfo: {} };
         var tempAuth = null; // Store temp auth for change password
@@ -503,28 +487,25 @@
             return div.innerHTML;
         }
 
+        // URL Web App GAS Anda (WAJIB DIGANTI SETELAH DEPLOY)
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzr3aK5DTPcLVeoqpWwmT3b6TmZ6i5lEBXO-6RDF9Wl__oKJhL39EZ8TkeIGk47DsQ/exec";
+
+        // Matikan mode simulasi agar aplikasi berjalan secara live di GitHub
+        if (typeof google === 'undefined') {
+            window.google = { script: { run: {} } };
+        }
+
         function gasRun(funcName) {
             var args = Array.prototype.slice.call(arguments, 1);
             return new Promise(function(resolve, reject) {
-                if (!WEB_APP_URL || WEB_APP_URL === "URL_WEB_APP_APPS_SCRIPT_ANDA_DISINI") {
-                    return reject(new Error("PENTING: Anda belum memasukkan URL Web App. Buka Index.html dan ganti variabel WEB_APP_URL dengan URL Deploy Apps Script Anda."));
-                }
-
-                // Mengirim permintaan data ke Apps Script via URL
-                fetch(WEB_APP_URL, {
+                fetch(GAS_API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: funcName, args: args })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain agar tidak diblokir CORS
+                    body: JSON.stringify({ funcName: funcName, args: args })
                 })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.error) reject(new Error(data.message));
-                    else resolve(data.result);
-                })
-                .catch(function(err) {
-                    console.error('API Error:', err);
-                    reject(new Error("Gagal terhubung ke server database. Pastikan URL Web App benar dan internet stabil."));
-                });
+                .then(function(response) { return response.json(); })
+                .then(function(res) { resolve(res); })
+                .catch(function(err) { reject(err); });
             });
         }
 
@@ -1184,12 +1165,8 @@ function renderDplReport() {
 
                 rub.items.forEach(function(item, idx) {
                     var groupName = 'rb_' + req.key + '_' + item.id;
-                    html += '<div class="mb-4 pb-3 border-bottom rub-item" id="rubitem_'+groupName+'">' +
-                            '<div class="rub-item-header">' +
-                            '<span class="rub-item-num">'+(idx+1)+'</span>' +
-                            '<span class="rub-item-title">'+escapeHTML(item.ind)+'</span>' +
-                            '<span class="rub-item-checkmark"><i class="fa-solid fa-check"></i></span>' +
-                            '</div>' +
+                    html += '<div class="mb-4 pb-3 border-bottom rub-item">' +
+                            '<h6 class="fw-bold mb-3"><span class="badge bg-dark me-2">'+(idx+1)+'</span>'+escapeHTML(item.ind)+'</h6>' +
                             '<div class="row g-2">';
                     
                     [4, 3, 2, 1].forEach(function(score) {
@@ -1197,7 +1174,7 @@ function renderDplReport() {
                         var radId = groupName + '_' + score;
                         var colorClass = score===4?'text-primary':(score===3?'text-success':(score===2?'text-warning':'text-danger'));
                         html += '<div class="col-md-3">' +
-                                '<input type="radio" class="btn-check rub-input" name="'+groupName+'" id="'+radId+'" value="'+score+'" data-parent="'+req.key+'" data-group="'+groupName+'" onchange="updateRubricItem(\''+groupName+'\'); updateRubricBadge(\''+req.key+'\', '+rub.items.length+')">' +
+                                '<input type="radio" class="btn-check rub-input" name="'+groupName+'" id="'+radId+'" value="'+score+'" data-parent="'+req.key+'" onchange="updateRubricBadge(\''+req.key+'\', '+rub.items.length+')">' +
                                 '<label class="rubric-card p-3 w-100" for="'+radId+'">' +
                                 '<div class="fw-bold mb-1 '+colorClass+'">Skor '+score+'</div>' +
                                 '<small class="text-secondary d-block lh-sm" style="font-size:0.8rem;">'+escapeHTML(scoreText)+'</small>' +
@@ -1211,73 +1188,25 @@ function renderDplReport() {
                 acc.innerHTML += html;
             });
 
-            // Fungsi helper untuk restore draft selections ke UI
-            function restoreDraftToUI(draftObj) {
-                var restoredCount = 0;
-                Object.keys(draftObj).forEach(function(key) {
-                    var targetId = key + '_' + draftObj[key];
-                    var el = document.getElementById(targetId);
-                    if (el) { el.checked = true; restoredCount++; }
-                });
-                console.log('[SIAP] Draft restored:', restoredCount, 'selections');
-                // Update status visual per indikator dan badge per section
-                requiredRubrics.forEach(function(req) {
-                    var rub = DATA_RUBRIK[req.key];
-                    rub.items.forEach(function(item) {
-                        var groupName = 'rb_' + req.key + '_' + item.id;
-                        updateRubricItem(groupName);
-                    });
-                    updateRubricBadge(req.key, rub.items.length);
-                });
-                return restoredCount;
-            }
-
-            // Coba restore dari server data dulu
-            var draftRestored = false;
             var mhsItem = appData.mhsList.find(function(x){return x.username === mhsUsername});
             if (mhsItem) {
                 var draftStr = role === 'DPL' ? mhsItem.dpl_draft : mhsItem.gp_draft;
                 if (draftStr) {
                     try {
-                        var draftObj = draftStr;
-                        if (typeof draftObj === 'string') draftObj = JSON.parse(draftObj);
-                        if (typeof draftObj === 'string') draftObj = JSON.parse(draftObj);
-                        if (draftObj && typeof draftObj === 'object' && Object.keys(draftObj).length > 0) {
-                            restoreDraftToUI(draftObj);
-                            draftRestored = true;
-                        }
-                    } catch(e) { console.error('[SIAP] Error parsing server draft:', e); }
+                        var draftObj = JSON.parse(draftStr);
+                        Object.keys(draftObj).forEach(function(key) {
+                            var el = document.getElementById(key + '_' + draftObj[key]);
+                            if (el) el.checked = true;
+                        });
+                        requiredRubrics.forEach(function(req) {
+                            updateRubricBadge(req.key, DATA_RUBRIK[req.key].items.length);
+                        });
+                    } catch(e) { console.error('Error parsing draft:', e); }
                 }
-            }
-
-            // Fallback: coba restore dari localStorage
-            if (!draftRestored) {
-                try {
-                    var localKey = 'siap_draft_' + role + '_' + mhsUsername;
-                    var localDraft = localStorage.getItem(localKey);
-                    if (localDraft) {
-                        var localObj = JSON.parse(localDraft);
-                        if (localObj && typeof localObj === 'object' && Object.keys(localObj).length > 0) {
-                            restoreDraftToUI(localObj);
-                            console.log('[SIAP] Draft restored from localStorage fallback');
-                        }
-                    }
-                } catch(e) { console.log('[SIAP] No localStorage draft:', e); }
             }
 
             var m = new bootstrap.Modal(document.getElementById('modalNilai'));
             m.show();
-        };
-
-        window.updateRubricItem = function(groupName) {
-            var itemEl = document.getElementById('rubitem_' + groupName);
-            if (!itemEl) return;
-            var isChecked = document.querySelector('input[name="'+groupName+'"]:checked') !== null;
-            if (isChecked) {
-                itemEl.classList.add('rub-item-done');
-            } else {
-                itemEl.classList.remove('rub-item-done');
-            }
         };
 
         window.updateRubricBadge = function(key, total) {
@@ -1286,14 +1215,11 @@ function renderDplReport() {
             if(badge) {
                 badge.innerText = checkedCount + ' / ' + total + ' Terisi';
                 if(checkedCount === total) {
-                    badge.classList.remove('bg-secondary', 'bg-warning', 'text-dark');
+                    badge.classList.remove('bg-secondary', 'bg-warning');
                     badge.classList.add('bg-success');
-                } else if (checkedCount > 0) {
+                } else {
                     badge.classList.remove('bg-success', 'bg-secondary');
                     badge.classList.add('bg-warning', 'text-dark');
-                } else {
-                    badge.classList.remove('bg-success', 'bg-warning', 'text-dark');
-                    badge.classList.add('bg-secondary');
                 }
             }
         };
@@ -1342,16 +1268,6 @@ function renderDplReport() {
             }
             
             payload.draftSelections = JSON.stringify(payload.draftSelections);
-
-            // Simpan ke localStorage sebagai backup
-            try {
-                var localKey = 'siap_draft_' + role + '_' + mhs;
-                if (isDraft) {
-                    localStorage.setItem(localKey, payload.draftSelections);
-                } else {
-                    localStorage.removeItem(localKey);
-                }
-            } catch(e) { /* ignore localStorage errors */ }
 
             var mhsItem = appData.mhsList.find(function(x){return x.username === mhs});
             if(mhsItem) mhsItem._isSyncing = true;
