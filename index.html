@@ -465,7 +465,7 @@
 
         // === KONFIGURASI GITHUB PAGES ===
         // Nanti ganti teks di bawah dengan URL Web App Apps Script Anda!
-        var WEB_APP_URL = "https://script.google.com/a/macros/fkip.unsika.ac.id/s/AKfycbxow2FKmrcZ2f1seJxQQ70Vt1pZi_C5slVjDV6oYhRRxcYigLSkBS-K4e4AUuvHQmI/exec";
+        var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx453qaYGl-HfjEEwkL6xk13UaxnGUBkZW-5mLRCOlGqJbXqRL0o-sbzWJ3qk6aZ9s/exec";
 
         // Mematikan mode simulasi otomatis agar terhubung ke database asli
         window.google = { script: { run: {} } };
@@ -1211,27 +1211,58 @@ function renderDplReport() {
                 acc.innerHTML += html;
             });
 
+            // Fungsi helper untuk restore draft selections ke UI
+            function restoreDraftToUI(draftObj) {
+                var restoredCount = 0;
+                Object.keys(draftObj).forEach(function(key) {
+                    var targetId = key + '_' + draftObj[key];
+                    var el = document.getElementById(targetId);
+                    if (el) { el.checked = true; restoredCount++; }
+                });
+                console.log('[SIAP] Draft restored:', restoredCount, 'selections');
+                // Update status visual per indikator dan badge per section
+                requiredRubrics.forEach(function(req) {
+                    var rub = DATA_RUBRIK[req.key];
+                    rub.items.forEach(function(item) {
+                        var groupName = 'rb_' + req.key + '_' + item.id;
+                        updateRubricItem(groupName);
+                    });
+                    updateRubricBadge(req.key, rub.items.length);
+                });
+                return restoredCount;
+            }
+
+            // Coba restore dari server data dulu
+            var draftRestored = false;
             var mhsItem = appData.mhsList.find(function(x){return x.username === mhsUsername});
             if (mhsItem) {
                 var draftStr = role === 'DPL' ? mhsItem.dpl_draft : mhsItem.gp_draft;
                 if (draftStr) {
                     try {
-                        var draftObj = JSON.parse(draftStr);
-                        Object.keys(draftObj).forEach(function(key) {
-                            var el = document.getElementById(key + '_' + draftObj[key]);
-                            if (el) el.checked = true;
-                        });
-                        // Update status visual per indikator dan badge per section
-                        requiredRubrics.forEach(function(req) {
-                            var rub = DATA_RUBRIK[req.key];
-                            rub.items.forEach(function(item) {
-                                var groupName = 'rb_' + req.key + '_' + item.id;
-                                updateRubricItem(groupName);
-                            });
-                            updateRubricBadge(req.key, rub.items.length);
-                        });
-                    } catch(e) { console.error('Error parsing draft:', e); }
+                        var draftObj = draftStr;
+                        if (typeof draftObj === 'string') draftObj = JSON.parse(draftObj);
+                        if (typeof draftObj === 'string') draftObj = JSON.parse(draftObj);
+                        if (draftObj && typeof draftObj === 'object' && Object.keys(draftObj).length > 0) {
+                            restoreDraftToUI(draftObj);
+                            draftRestored = true;
+                        }
+                    } catch(e) { console.error('[SIAP] Error parsing server draft:', e); }
                 }
+            }
+
+            // Fallback: coba restore dari localStorage
+            if (!draftRestored) {
+                try {
+                    var localKey = 'siap_draft_' + role + '_' + mhsUsername;
+                    var localDraft = localStorage.getItem(localKey);
+                    if (localDraft) {
+                        var localObj = JSON.parse(localDraft);
+                        if (localObj && typeof localObj === 'object' && Object.keys(localObj).length > 0) {
+                            restoreDraftToUI(localObj);
+                            console.log('[SIAP] Draft restored from localStorage fallback');
+                        }
+                    }
+                } catch(e) { console.log('[SIAP] No localStorage draft:', e); }
             }
 
             var m = new bootstrap.Modal(document.getElementById('modalNilai'));
@@ -1311,6 +1342,16 @@ function renderDplReport() {
             }
             
             payload.draftSelections = JSON.stringify(payload.draftSelections);
+
+            // Simpan ke localStorage sebagai backup
+            try {
+                var localKey = 'siap_draft_' + role + '_' + mhs;
+                if (isDraft) {
+                    localStorage.setItem(localKey, payload.draftSelections);
+                } else {
+                    localStorage.removeItem(localKey);
+                }
+            } catch(e) { /* ignore localStorage errors */ }
 
             var mhsItem = appData.mhsList.find(function(x){return x.username === mhs});
             if(mhsItem) mhsItem._isSyncing = true;
