@@ -29,6 +29,14 @@
         .rubric-card:hover { border-color: #0d6efd; background-color: #f8faff; }
         .btn-check:checked + .rubric-card { background-color: #e7f1ff; border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
         .accordion-button:not(.collapsed) { background-color: #e7f1ff; color: #0d6efd; font-weight: 600; }
+        /* Status Indikator Terisi */
+        .rub-item-done .rub-item-num { background-color: #198754 !important; }
+        .rub-item-done .rub-item-title { color: #198754; }
+        .rub-item-done .rub-item-checkmark { display: inline-flex !important; }
+        .rub-item-checkmark { display: none; align-items: center; justify-content: center; width: 20px; height: 20px; background: #198754; border-radius: 50%; color: #fff; font-size: 0.65rem; margin-left: 8px; flex-shrink: 0; }
+        .rub-item-header { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        .rub-item-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #212529; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-right: 8px; transition: background 0.3s; }
+        .rub-item-title { font-weight: 600; font-size: 0.95rem; transition: color 0.3s; }
     </style>
 </head>
 <body>
@@ -1176,8 +1184,12 @@ function renderDplReport() {
 
                 rub.items.forEach(function(item, idx) {
                     var groupName = 'rb_' + req.key + '_' + item.id;
-                    html += '<div class="mb-4 pb-3 border-bottom rub-item">' +
-                            '<h6 class="fw-bold mb-3"><span class="badge bg-dark me-2">'+(idx+1)+'</span>'+escapeHTML(item.ind)+'</h6>' +
+                    html += '<div class="mb-4 pb-3 border-bottom rub-item" id="rubitem_'+groupName+'">' +
+                            '<div class="rub-item-header">' +
+                            '<span class="rub-item-num">'+(idx+1)+'</span>' +
+                            '<span class="rub-item-title">'+escapeHTML(item.ind)+'</span>' +
+                            '<span class="rub-item-checkmark"><i class="fa-solid fa-check"></i></span>' +
+                            '</div>' +
                             '<div class="row g-2">';
                     
                     [4, 3, 2, 1].forEach(function(score) {
@@ -1185,7 +1197,7 @@ function renderDplReport() {
                         var radId = groupName + '_' + score;
                         var colorClass = score===4?'text-primary':(score===3?'text-success':(score===2?'text-warning':'text-danger'));
                         html += '<div class="col-md-3">' +
-                                '<input type="radio" class="btn-check rub-input" name="'+groupName+'" id="'+radId+'" value="'+score+'" data-parent="'+req.key+'" onchange="updateRubricBadge(\''+req.key+'\', '+rub.items.length+')">' +
+                                '<input type="radio" class="btn-check rub-input" name="'+groupName+'" id="'+radId+'" value="'+score+'" data-parent="'+req.key+'" data-group="'+groupName+'" onchange="updateRubricItem(\''+groupName+'\'); updateRubricBadge(\''+req.key+'\', '+rub.items.length+')">' +
                                 '<label class="rubric-card p-3 w-100" for="'+radId+'">' +
                                 '<div class="fw-bold mb-1 '+colorClass+'">Skor '+score+'</div>' +
                                 '<small class="text-secondary d-block lh-sm" style="font-size:0.8rem;">'+escapeHTML(scoreText)+'</small>' +
@@ -1209,8 +1221,14 @@ function renderDplReport() {
                             var el = document.getElementById(key + '_' + draftObj[key]);
                             if (el) el.checked = true;
                         });
+                        // Update status visual per indikator dan badge per section
                         requiredRubrics.forEach(function(req) {
-                            updateRubricBadge(req.key, DATA_RUBRIK[req.key].items.length);
+                            var rub = DATA_RUBRIK[req.key];
+                            rub.items.forEach(function(item) {
+                                var groupName = 'rb_' + req.key + '_' + item.id;
+                                updateRubricItem(groupName);
+                            });
+                            updateRubricBadge(req.key, rub.items.length);
                         });
                     } catch(e) { console.error('Error parsing draft:', e); }
                 }
@@ -1220,17 +1238,31 @@ function renderDplReport() {
             m.show();
         };
 
+        window.updateRubricItem = function(groupName) {
+            var itemEl = document.getElementById('rubitem_' + groupName);
+            if (!itemEl) return;
+            var isChecked = document.querySelector('input[name="'+groupName+'"]:checked') !== null;
+            if (isChecked) {
+                itemEl.classList.add('rub-item-done');
+            } else {
+                itemEl.classList.remove('rub-item-done');
+            }
+        };
+
         window.updateRubricBadge = function(key, total) {
             var checkedCount = document.querySelectorAll('input[data-parent="'+key+'"]:checked').length;
             var badge = document.getElementById('badge_'+key);
             if(badge) {
                 badge.innerText = checkedCount + ' / ' + total + ' Terisi';
                 if(checkedCount === total) {
-                    badge.classList.remove('bg-secondary', 'bg-warning');
+                    badge.classList.remove('bg-secondary', 'bg-warning', 'text-dark');
                     badge.classList.add('bg-success');
-                } else {
+                } else if (checkedCount > 0) {
                     badge.classList.remove('bg-success', 'bg-secondary');
                     badge.classList.add('bg-warning', 'text-dark');
+                } else {
+                    badge.classList.remove('bg-success', 'bg-warning', 'text-dark');
+                    badge.classList.add('bg-secondary');
                 }
             }
         };
