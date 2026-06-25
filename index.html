@@ -53,7 +53,7 @@
                     <div class="fw-bold text-primary mb-2"><i class="fa-solid fa-circle-info me-1"></i> Panduan Login</div>
                     <ul class="list-unstyled mb-2" style="line-height: 1.6;">
                         <li>👨‍🏫 <strong>DPL:</strong> Username menggunakan NIP/NIS</li>
-                        <li>👨‍🏫 <strong>Guru Pamong:</strong> Username menggunakan NIK</li>
+                        <li class="d-flex align-items-center gap-2 flex-wrap mb-1">🧑‍🏫 <strong>Guru Pamong:</strong> <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" onclick="new bootstrap.Modal(document.getElementById('modalGuruPamong')).show()"><i class="fa-solid fa-list me-1"></i>Klik Untuk Lihat Username Pamong</button></li>
                         <li>🎓 <strong>Mahasiswa:</strong> Username menggunakan NIM</li>
                     </ul>
                     <hr class="my-2 border-secondary opacity-25">
@@ -332,6 +332,38 @@
     </div>
 
     <!-- JS Libraries -->
+    <div class="modal fade" id="modalGuruPamong" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-users me-2"></i>Daftar Username Guru Pamong FUB</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="mb-3">
+                        <input type="text" id="searchPamong" class="form-control form-control-lg shadow-sm" placeholder="🔍 Cari nama sekolah atau mata pelajaran..." onkeyup="filterPamong()">
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle m-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Sekolah</th>
+                                        <th>Mata Pelajaran</th>
+                                        <th>Username</th>
+                                        <th class="pe-4">Password Default</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pamongTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -1365,10 +1397,47 @@ function renderDplReport() {
                         }).catch(function(err){
                             if(mhsItem) delete mhsItem._isSyncing; renderAssessorDashboard(); Swal.fire('Error', err.message, 'error');
                         });
-                    }
+                 }
                 }
             });
         };
+
+        // --- FITUR GURU PAMONG DATA FUB ---
+        var pamongData = [{"Sekolah":"SMA Ignatius Slamet Riyadi Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMAIgnatiusSlametRiyadiKarawang-pbsi","password default":123456},{"Sekolah":"SMA Ignatius Slamet Riyadi Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMAIgnatiusSlametRiyadiKarawang-pbi","password default":123456},{"Sekolah":"SMA Ignatius Slamet Riyadi Karawang","Mata Pelajaran":"Matematika","username":"SMAIgnatiusSlametRiyadiKarawang-pmat","password default":123456},{"Sekolah":"SMA Ignatius Slamet Riyadi Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMAIgnatiusSlametRiyadiKarawang-pjkr","password default":123456},{"Sekolah":"SMA Korpri Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMAKorpriKarawang-pbsi","password default":123456},{"Sekolah":"SMA Korpri Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMAKorpriKarawang-pbi","password default":123456},{"Sekolah":"SMA Korpri Karawang","Mata Pelajaran":"Matematika","username":"SMAKorpriKarawang-pmat","password default":123456},{"Sekolah":"SMA Korpri Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMAKorpriKarawang-pjkr","password default":123456},{"Sekolah":"SMAN 1 Telukjambe Barat","Mata Pelajaran":"Bahasa Indonesia","username":"SMAN1TelukjambeBarat-pbsi","password default":123456},{"Sekolah":"SMAN 1 Telukjambe Barat","Mata Pelajaran":"Bahasa Inggris","username":"SMAN1TelukjambeBarat-pbi","password default":123456},{"Sekolah":"SMAN 1 Telukjambe Barat","Mata Pelajaran":"Matematika","username":"SMAN1TelukjambeBarat-pmat","password default":123456},{"Sekolah":"SMAN 1 Telukjambe Barat","Mata Pelajaran":"Pendidikan Jasmani","username":"SMAN1TelukjambeBarat-pjkr","password default":123456},{"Sekolah":"SMAN 6 Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMAN6Karawang-pbsi","password default":123456},{"Sekolah":"SMAN 6 Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMAN6Karawang-pbi","password default":123456},{"Sekolah":"SMAN 6 Karawang","Mata Pelajaran":"Matematika","username":"SMAN6Karawang-pmat","password default":123456},{"Sekolah":"SMAN 6 Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMAN6Karawang-pjkr","password default":123456},{"Sekolah":"SMKN 2 Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMKN2Karawang-pbsi","password default":123456},{"Sekolah":"SMKN 2 Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMKN2Karawang-pbi","password default":123456},{"Sekolah":"SMKN 2 Karawang","Mata Pelajaran":"Matematika","username":"SMKN2Karawang-pmat","password default":123456},{"Sekolah":"SMKN 2 Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMKN2Karawang-pjkr","password default":123456},{"Sekolah":"SMKN 3 Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMKN3Karawang-pbsi","password default":123456},{"Sekolah":"SMKN 3 Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMKN3Karawang-pbi","password default":123456},{"Sekolah":"SMKN 3 Karawang","Mata Pelajaran":"Matematika","username":"SMKN3Karawang-pmat","password default":123456},{"Sekolah":"SMKN 3 Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMKN3Karawang-pjkr","password default":123456},{"Sekolah":"SMKS Bina Karya 1 Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMKSBinaKarya1Karawang-pbsi","password default":123456},{"Sekolah":"SMKS Bina Karya 1 Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMKSBinaKarya1Karawang-pbi","password default":123456},{"Sekolah":"SMKS Bina Karya 1 Karawang","Mata Pelajaran":"Matematika","username":"SMKSBinaKarya1Karawang-pmat","password default":123456},{"Sekolah":"SMKS Bina Karya 1 Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMKSBinaKarya1Karawang-pjkr","password default":123456},{"Sekolah":"SMKS Bina Karya 2 Karawang","Mata Pelajaran":"Bahasa Indonesia","username":"SMKSBinaKarya2Karawang-pbsi","password default":123456},{"Sekolah":"SMKS Bina Karya 2 Karawang","Mata Pelajaran":"Bahasa Inggris","username":"SMKSBinaKarya2Karawang-pbi","password default":123456},{"Sekolah":"SMKS Bina Karya 2 Karawang","Mata Pelajaran":"Matematika","username":"SMKSBinaKarya2Karawang-pmat","password default":123456},{"Sekolah":"SMKS Bina Karya 2 Karawang","Mata Pelajaran":"Pendidikan Jasmani","username":"SMKSBinaKarya2Karawang-pjkr","password default":123456},{"Sekolah":"SMP Islam Al Mumtaaz","Mata Pelajaran":"Bahasa Indonesia","username":"SMPIslamAlMumtaaz-pbsi","password default":123456},{"Sekolah":"SMP Islam Al Mumtaaz","Mata Pelajaran":"Bahasa Inggris","username":"SMPIslamAlMumtaaz-pbi","password default":123456},{"Sekolah":"SMP Islam Al Mumtaaz","Mata Pelajaran":"Matematika","username":"SMPIslamAlMumtaaz-pmat","password default":123456},{"Sekolah":"SMP Islam Al Mumtaaz","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPIslamAlMumtaaz-pjkr","password default":123456},{"Sekolah":"SMP Islam At Thohariyah","Mata Pelajaran":"Bahasa Indonesia","username":"SMPIslamAtThohariyah-pbsi","password default":123456},{"Sekolah":"SMP Islam At Thohariyah","Mata Pelajaran":"Bahasa Inggris","username":"SMPIslamAtThohariyah-pbi","password default":123456},{"Sekolah":"SMP Islam At Thohariyah","Mata Pelajaran":"Matematika","username":"SMPIslamAtThohariyah-pmat","password default":123456},{"Sekolah":"SMP Islam At Thohariyah","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPIslamAtThohariyah-pjkr","password default":123456},{"Sekolah":"SMPN 1 Klari","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN1Klari-pbsi","password default":123456},{"Sekolah":"SMPN 1 Klari","Mata Pelajaran":"Bahasa Inggris","username":"SMPN1Klari-pbi","password default":123456},{"Sekolah":"SMPN 1 Klari","Mata Pelajaran":"Matematika","username":"SMPN1Klari-pmat","password default":123456},{"Sekolah":"SMPN 1 Klari","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN1Klari-pjkr","password default":123456},{"Sekolah":"SMPN 1 Telukjambe Barat","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN1TelukjambeBarat-pbsi","password default":123456},{"Sekolah":"SMPN 1 Telukjambe Barat","Mata Pelajaran":"Bahasa Inggris","username":"SMPN1TelukjambeBarat-pbi","password default":123456},{"Sekolah":"SMPN 1 Telukjambe Barat","Mata Pelajaran":"Matematika","username":"SMPN1TelukjambeBarat-pmat","password default":123456},{"Sekolah":"SMPN 1 Telukjambe Barat","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN1TelukjambeBarat-pjkr","password default":123456},{"Sekolah":"SMPN 3 Karawang Barat","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN3KarawangBarat-pbsi","password default":123456},{"Sekolah":"SMPN 3 Karawang Barat","Mata Pelajaran":"Bahasa Inggris","username":"SMPN3KarawangBarat-pbi","password default":123456},{"Sekolah":"SMPN 3 Karawang Barat","Mata Pelajaran":"Matematika","username":"SMPN3KarawangBarat-pmat","password default":123456},{"Sekolah":"SMPN 3 Karawang Barat","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN3KarawangBarat-pjkr","password default":123456},{"Sekolah":"SMPN 3 Karawang Timur","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN3KarawangTimur-pbsi","password default":123456},{"Sekolah":"SMPN 3 Karawang Timur","Mata Pelajaran":"Bahasa Inggris","username":"SMPN3KarawangTimur-pbi","password default":123456},{"Sekolah":"SMPN 3 Karawang Timur","Mata Pelajaran":"Matematika","username":"SMPN3KarawangTimur-pmat","password default":123456},{"Sekolah":"SMPN 3 Karawang Timur","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN3KarawangTimur-pjkr","password default":123456},{"Sekolah":"SMPN 4 Karawang Barat","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN4KarawangBarat-pbsi","password default":123456},{"Sekolah":"SMPN 4 Karawang Barat","Mata Pelajaran":"Bahasa Inggris","username":"SMPN4KarawangBarat-pbi","password default":123456},{"Sekolah":"SMPN 4 Karawang Barat","Mata Pelajaran":"Matematika","username":"SMPN4KarawangBarat-pmat","password default":123456},{"Sekolah":"SMPN 4 Karawang Barat","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN4KarawangBarat-pjkr","password default":123456},{"Sekolah":"SMPN 4 Klari","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN4Klari-pbsi","password default":123456},{"Sekolah":"SMPN 4 Klari","Mata Pelajaran":"Bahasa Inggris","username":"SMPN4Klari-pbi","password default":123456},{"Sekolah":"SMPN 4 Klari","Mata Pelajaran":"Matematika","username":"SMPN4Klari-pmat","password default":123456},{"Sekolah":"SMPN 4 Klari","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN4Klari-pjkr","password default":123456},{"Sekolah":"SMPN 6 Karawang Barat","Mata Pelajaran":"Bahasa Indonesia","username":"SMPN6KarawangBarat-pbsi","password default":123456},{"Sekolah":"SMPN 6 Karawang Barat","Mata Pelajaran":"Bahasa Inggris","username":"SMPN6KarawangBarat-pbi","password default":123456},{"Sekolah":"SMPN 6 Karawang Barat","Mata Pelajaran":"Matematika","username":"SMPN6KarawangBarat-pmat","password default":123456},{"Sekolah":"SMPN 6 Karawang Barat","Mata Pelajaran":"Pendidikan Jasmani","username":"SMPN6KarawangBarat-pjkr","password default":123456}];
+
+        function renderPamongTable(data) {
+            var tbody = document.getElementById('pamongTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4"><i class="fa-solid fa-folder-open fa-2x mb-2 d-block opacity-50"></i>Data tidak ditemukan</td></tr>';
+                return;
+            }
+            var html = '';
+            data.forEach(function(item) {
+                html += '<tr>' +
+                        '<td class="ps-4 fw-semibold text-primary">' + escapeHTML(item["Sekolah"]) + '</td>' +
+                        '<td>' + escapeHTML(item["Mata Pelajaran"]) + '</td>' +
+                        '<td class="fw-bold"><span class="badge bg-light text-dark border user-select-all" style="font-size: 0.9rem;">' + escapeHTML(item["username"]) + '</span></td>' +
+                        '<td class="pe-4 fw-bold text-danger">' + escapeHTML(item["password default"]) + '</td>' +
+                        '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.filterPamong = function() {
+            var q = document.getElementById('searchPamong').value.toLowerCase();
+            var filtered = pamongData.filter(function(item) {
+                return String(item["Sekolah"]).toLowerCase().includes(q) || 
+                       String(item["Mata Pelajaran"]).toLowerCase().includes(q) ||
+                       String(item["username"]).toLowerCase().includes(q);
+            });
+            renderPamongTable(filtered);
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPamongTable(pamongData);
+        });
 
     })();
     </script>
