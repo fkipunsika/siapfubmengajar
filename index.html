@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIAP FUB MENGAJAR</title>
+
+    <!--
+      GitHub Pages tidak dapat memakai google.script.run dan harus melewati
+      redirect ContentService yang lambat/tidak stabil. Arahkan pengguna ke
+      Web App GAS agar autentikasi memakai koneksi native.
+    -->
+    <script>
+        (function() {
+            var directGasApp = 'https://script.google.com/macros/s/AKfycbxICKC5MOqxsADYv-HNnrkObE02zUdOvdjQsI7Z3kSWKpF8zJGT8G7BJdvDjU-4y-Y/exec';
+            if (window.location.hostname === 'fkipunsika.github.io') {
+                window.location.replace(directGasApp);
+            }
+        })();
+    </script>
     
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -626,6 +640,15 @@
             }, 2000);
         }
 
+        var backendWarmUpStarted = false;
+        function warmUpBackend() {
+            if (backendWarmUpStarted || USE_SIMULATION) return;
+            backendWarmUpStarted = true;
+            gasRun('warmUp').catch(function(error) {
+                console.warn('Pemanasan backend dilewati:', error.message);
+            });
+        }
+
         function showFullPageLoading(msg) {
             var l = document.getElementById('fullPageLoader');
             if(!l) return;
@@ -649,6 +672,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             var _authKey = Auth.init();
+            warmUpBackend();
 
             window.handleLogin = function(e) {
                 e.preventDefault();
