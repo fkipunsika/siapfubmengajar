@@ -523,7 +523,7 @@
         }
 
         // URL deployment Web App GAS. Perbarui jika deployment membuat URL baru.
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyPcO0Yr7BRi8kwQEHzirMpxFMNn6RcCbTM1aRy1IQ9F2dj9AlWxLh7v1nQIwnmieI/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzpXkGErR5jQbGRbeFQosZP95viltC8afy1R4r8qcYkxd_TIK_H5hD4uH2TRxwLsvE/exec";
         const USE_SIMULATION = false;
         const HAS_NATIVE_GAS_RUNNER =
             typeof google !== 'undefined' &&
@@ -614,6 +614,18 @@
             return false;
         }
 
+        function recordLoginAuditLater() {
+            var token = Auth.getToken();
+            if (!token) return;
+
+            // Audit tidak perlu menahan tampilan dashboard.
+            setTimeout(function() {
+                gasRun('recordLoginAudit', token).catch(function(error) {
+                    console.warn('Audit login tidak tersimpan:', error.message);
+                });
+            }, 2000);
+        }
+
         function showFullPageLoading(msg) {
             var l = document.getElementById('fullPageLoader');
             if(!l) return;
@@ -685,6 +697,7 @@
                                     Auth.login(res.token, res.user, _authKey);
                                     checkLoginState();
                                 }
+                                recordLoginAuditLater();
                             }
                         } else {
                             Swal.fire('Gagal', res.message, 'error');
