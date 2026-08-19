@@ -522,25 +522,85 @@
             return div.innerHTML;
         }
 
-        // URL Web App GAS Anda (WAJIB DIGANTI SETELAH DEPLOY)
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxexsd4OWBCbfFXGOgbk4JUxpUC9Q8iBtCrdmaWqHRxSzdU8WLtahVhMOiRoon2v_g/exec";
+        // URL deployment Web App GAS. Perbarui jika deployment membuat URL baru.
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyPcO0Yr7BRi8kwQEHzirMpxFMNn6RcCbTM1aRy1IQ9F2dj9AlWxLh7v1nQIwnmieI/exec";
+        const USE_SIMULATION = false;
+        const HAS_NATIVE_GAS_RUNNER =
+            typeof google !== 'undefined' &&
+            google.script &&
+            google.script.run &&
+            typeof google.script.run.withSuccessHandler === 'function';
 
-        // Matikan mode simulasi agar aplikasi berjalan secara live di GitHub
-        if (typeof google === 'undefined') {
-            window.google = { script: { run: {} } };
+        function normalizeGasError(error) {
+            if (error instanceof Error) return error;
+            if (error && error.message) return new Error(error.message);
+            return new Error(String(error || 'Terjadi kesalahan saat menghubungi server.'));
+        }
+
+        function callGasApi(funcName, args, attempt) {
+            return fetch(GAS_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain agar tidak memicu preflight CORS
+                body: JSON.stringify({ funcName: funcName, args: args }),
+                cache: 'no-store',
+                redirect: 'follow'
+            }).then(function(response) {
+                return response.text().then(function(body) {
+                    var result;
+                    try {
+                        result = JSON.parse(body);
+                    } catch (parseError) {
+                        var returnedHtml = /^\s*</.test(body);
+                        var transientResponse = returnedHtml || response.status === 404 || response.status >= 500;
+
+                        // ContentService memakai URL redirect sementara. Ulangi sekali jika
+                        // redirect tersebut kedaluwarsa atau Google mengembalikan halaman HTML.
+                        if (attempt === 0 && transientResponse) {
+                            return new Promise(function(resolve) {
+                                setTimeout(resolve, 700);
+                            }).then(function() {
+                                return callGasApi(funcName, args, 1);
+                            });
+                        }
+
+                        throw new Error(
+                            returnedHtml
+                                ? 'Server Apps Script mengembalikan halaman HTML, bukan data JSON (HTTP ' + response.status + '). Periksa deployment dan hak akses Web App.'
+                                : 'Respons server tidak valid (HTTP ' + response.status + ').'
+                        );
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(result.message || ('Permintaan gagal (HTTP ' + response.status + ').'));
+                    }
+                    return result;
+                });
+            });
         }
 
         function gasRun(funcName) {
             var args = Array.prototype.slice.call(arguments, 1);
-            return new Promise(function(resolve, reject) {
-                fetch(GAS_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain agar tidak diblokir CORS
-                    body: JSON.stringify({ funcName: funcName, args: args })
-                })
-                .then(function(response) { return response.json(); })
-                .then(function(res) { resolve(res); })
-                .catch(function(err) { reject(err); });
+
+            // Saat HTML disajikan oleh Apps Script, panggil fungsi server tanpa
+            // melewati endpoint ContentService dan redirect lintas domain.
+            if (HAS_NATIVE_GAS_RUNNER) {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        var runner = google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(function(error) {
+                                reject(normalizeGasError(error));
+                            });
+                        runner[funcName].apply(runner, args);
+                    } catch (error) {
+                        reject(normalizeGasError(error));
+                    }
+                });
+            }
+
+            // Dipakai ketika frontend berada di GitHub Pages/domain lain.
+            return callGasApi(funcName, args, 0).catch(function(error) {
+                throw normalizeGasError(error);
             });
         }
 
@@ -586,7 +646,7 @@
                 
                 showFullPageLoading('Otentikasi...');
                 
-                if (typeof google === 'undefined') {
+                if (USE_SIMULATION) {
                     setTimeout(function() {
                         if(p === '123456') {
                             hideFullPageLoading();
@@ -654,7 +714,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         showFullPageLoading('Mereset password...');
-                        if(typeof google === 'undefined') {
+                        if(USE_SIMULATION) {
                             setTimeout(function(){ hideFullPageLoading(); Swal.fire('Berhasil', 'Password direset (Simulasi)', 'success'); }, 1000);
                         } else {
                             gasRun('resetUserPassword', result.value).then(function(res) {
@@ -676,7 +736,7 @@
                 if(np === '123456') return Swal.fire('Error', 'Pilih password yang berbeda dengan password default!', 'warning');
                 
                 showFullPageLoading('Menyimpan password baru...');
-                if(typeof google === 'undefined') {
+                if(USE_SIMULATION) {
                     setTimeout(function() {
                         hideFullPageLoading();
                         var m = bootstrap.Modal.getInstance(document.getElementById('modalGantiPassword'));
@@ -709,7 +769,7 @@
             var formUser = document.getElementById('formUser');
             if(formUser) formUser.addEventListener('submit', window.handleUserSubmit);
 
-            if (typeof google === 'undefined') {
+            if (USE_SIMULATION) {
                 var pInfo = document.getElementById('previewLoginInfo');
                 if (pInfo) pInfo.classList.remove('d-none');
             }
@@ -799,7 +859,7 @@
                 if(!silent) showSectionLoading('assessorTableBody');
             }
 
-            if (typeof google === 'undefined') {
+            if (USE_SIMULATION) {
                 setTimeout(function() {
                     if(activePage !== reqPage && !silent) return;
                     if(pageId === 'page-admin') {
@@ -892,7 +952,7 @@
             var m = bootstrap.Modal.getInstance(document.getElementById('modalUser'));
             if(m) m.hide();
 
-            if(typeof google === 'undefined') {
+            if(USE_SIMULATION) {
                 setTimeout(function(){ delete appData.users[0]._isSyncing; renderAdminDashboard(); }, 1000);
             } else {
                 gasRun('saveUser', Auth.getToken(), payload).then(function(res){
@@ -909,7 +969,7 @@
                     var backup = JSON.parse(JSON.stringify(appData.users));
                     appData.users = appData.users.filter(function(x){return String(x.username) !== String(username)});
                     renderAdminDashboard();
-                    if(typeof google !== 'undefined') {
+                    if(!USE_SIMULATION) {
                         gasRun('deleteUser', Auth.getToken(), username).then(function(res){
                             if(handleSessionExpired(res)) return;
                             if(!res.success) { appData.users = backup; renderAdminDashboard(); Swal.fire('Error', res.message, 'error'); }
@@ -1019,7 +1079,7 @@
                 appData.files.push({ id: tempId, jenis_file: fileType, file_name: file.name, file_url: '#', _isSyncing: true });
                 renderMhsDashboard();
                 
-                if(typeof google === 'undefined') {
+                if(USE_SIMULATION) {
                     setTimeout(function() {
                         var idx = appData.files.findIndex(function(x){return x.id === tempId;});
                         if(idx > -1) { appData.files[idx]._isSyncing = false; appData.files[idx].file_url = '#'; }
@@ -1160,7 +1220,7 @@ function renderDplReport() {
                 appData._isUploadingDpl = true;
                 renderDplReport();
                 
-                if(typeof google === 'undefined') {
+                if(USE_SIMULATION) {
                     setTimeout(function() {
                         appData._isUploadingDpl = false;
                         appData.laporanDpl = { file_name: file.name, file_url: '#' };
@@ -1339,7 +1399,7 @@ function renderDplReport() {
             var m = bootstrap.Modal.getInstance(document.getElementById('modalNilai'));
             if(m) m.hide();
 
-            if (typeof google === 'undefined') {
+            if (USE_SIMULATION) {
                 setTimeout(function() {
                     if(mhsItem) { 
                         delete mhsItem._isSyncing; 
@@ -1383,7 +1443,7 @@ function renderDplReport() {
                     if(mhsItem) mhsItem._isSyncing = true;
                     renderAssessorDashboard();
 
-                    if(typeof google === 'undefined') {
+                    if(USE_SIMULATION) {
                         setTimeout(function(){
                             if(mhsItem) { delete mhsItem._isSyncing; mhsItem.is_validated = true; mhsItem.nilai_akhir = '88.5'; }
                             renderAssessorDashboard();
