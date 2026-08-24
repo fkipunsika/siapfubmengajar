@@ -12,7 +12,7 @@
     -->
     <script>
         (function() {
-            var directGasApp = 'https://script.google.com/macros/s/AKfycbxICKC5MOqxsADYv-HNnrkObE02zUdOvdjQsI7Z3kSWKpF8zJGT8G7BJdvDjU-4y-Y/exec';
+            var directGasApp = 'https://script.google.com/macros/s/AKfycbyw4ShsQhm3V1dCuIwTJHzqWam9H1WV_HBt90n_0pfeHCP8j9MclMFWuG8HTgJfX_c/exec';
             if (window.location.hostname === 'fkipunsika.github.io') {
                 window.location.replace(directGasApp);
             }
@@ -85,17 +85,20 @@
                         <label class="form-label small fw-semibold">Username</label>
                         <input type="text" id="username" class="form-control form-control-lg" required>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label small fw-semibold">Password</label>
                         <input type="password" id="password" class="form-control form-control-lg" required>
-                  </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3">Login Sistem</button>
-                    <div class="text-center mb-3">
-                        <a href="#" onclick="handleResetPassword(event)" class="text-decoration-none small fw-semibold text-primary">Lupa Password? (Reset ke Default)</a>
                     </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-2">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>Login Sistem
+                    </button>
                 </form>
 
-                <a href="#" class="btn btn-outline-primary w-100 fw-bold mt-2">
+                <button type="button" onclick="handleResetPassword(event)" class="btn btn-outline-secondary w-100 fw-bold mb-2">
+                    <i class="fa-solid fa-key me-2"></i> Reset Password
+                </button>
+
+                <a href="#" class="btn btn-outline-primary w-100 fw-bold">
                     <i class="fa-solid fa-book-open me-2"></i> Download Buku Panduan Aplikasi SIAP FUB Mengajar
                 </a>
             </div>
@@ -540,7 +543,7 @@
         }
 
         // URL deployment Web App GAS. Perbarui jika deployment membuat URL baru.
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzXjEW7PZC8D9Z1hpYaEp_-BRylqLEomZeRSHaqZy5soCSU5l1FiW9T1FZXR1bkDDA/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyw4ShsQhm3V1dCuIwTJHzqWam9H1WV_HBt90n_0pfeHCP8j9MclMFWuG8HTgJfX_c/exec";
         const USE_SIMULATION = false;
         const HAS_NATIVE_GAS_RUNNER =
             typeof google !== 'undefined' &&
