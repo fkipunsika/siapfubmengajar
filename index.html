@@ -12,7 +12,7 @@
     -->
     <script>
         (function() {
-            var directGasApp = 'https://script.google.com/macros/s/AKfycbxqQCi-nkIhaJLjHedBiRxPx0oj_KvYI7z-f-ipawuCj5fJcXZbqibeBUueI4uwlos/exec';
+            var directGasApp = 'https://script.google.com/macros/s/AKfycbxz98k7sYfMp8rO2kcSAnYrC4LofLPkpAWnR6cCEfigRNlasBBQDv4Gc84n4uxmx3M/exec';
             if (window.location.hostname === 'fkipunsika.github.io') {
                 window.location.replace(directGasApp);
             }
@@ -97,7 +97,7 @@
                     </div>
                 </form>
 
-                <a href="#" class="btn btn-outline-primary w-100 fw-bold">
+                <a href="#" onclick="handleDownloadGuide(event)" class="btn btn-outline-primary w-100 fw-bold">
                     <i class="fa-solid fa-book-open me-2"></i> Download Buku Panduan Aplikasi SIAP FUB Mengajar
                 </a>
             </div>
@@ -542,7 +542,9 @@
         }
 
         // URL deployment Web App GAS. Perbarui jika deployment membuat URL baru.
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxqQCi-nkIhaJLjHedBiRxPx0oj_KvYI7z-f-ipawuCj5fJcXZbqibeBUueI4uwlos/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxz98k7sYfMp8rO2kcSAnYrC4LofLPkpAWnR6cCEfigRNlasBBQDv4Gc84n4uxmx3M/exec";
+        // Isi dengan URL Google Drive/PDF buku panduan FUB Mengajar.
+        const GUIDE_URL = "https://drive.google.com/file/d/1yLcDybh_ARig2hs1WrmQJStvFCGVUofP/view?usp=drive_link";
         const USE_SIMULATION = false;
         const HAS_NATIVE_GAS_RUNNER =
             typeof google !== 'undefined' &&
@@ -738,10 +740,9 @@
                 }
            };
 
-          document.getElementById('loginForm').addEventListener('submit', window.handleLogin);
-        });
+            document.getElementById('loginForm').addEventListener('submit', window.handleLogin);
 
-        window.handleResetPassword = function(e) {
+            window.handleResetPassword = function(e) {
             e.preventDefault();
             Swal.fire({
                 title: 'Reset Password',
@@ -768,8 +769,17 @@
                     }
                 }
             });
-        };
-            
+            };
+
+            window.handleDownloadGuide = function(e) {
+                e.preventDefault();
+                if (!GUIDE_URL) {
+                    Swal.fire('Buku Panduan Belum Tersedia', 'Tautan buku panduan FUB Mengajar belum dikonfigurasi.', 'info');
+                    return;
+                }
+                window.open(GUIDE_URL, '_blank', 'noopener,noreferrer');
+            };
+             
             var formGantiPw = document.getElementById('formGantiPassword');
             if(formGantiPw) formGantiPw.addEventListener('submit', function(e) {
                 e.preventDefault();
